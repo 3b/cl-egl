@@ -5,7 +5,6 @@
       ((major 'EGLint 1)
        (minor 'EGLint 1))
     (when (= (eglInitialize display major minor) 0)
-      (terminate display)
       (error "Failed to initialize EGL with code ~d" (get-error)))
     (format t "~A~%" (get-error))
     (values (mem-aref major 'EGLint)

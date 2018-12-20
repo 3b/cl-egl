@@ -10,5 +10,6 @@
                (:file "library")
                (:file "types")
                (:file "functions")
-               (:file "cl-egl")))
+               (:file "cl-egl")
+               (:file "macros")))
 
