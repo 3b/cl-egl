@@ -22,7 +22,7 @@
      (defctype khronos_ssize_t :long)
      (defctype khronos_usize_t :unsigned-long))
     ((= (foreign-type-size :pointer)
-         (foreign-type-size :long-long))
+        (foreign-type-size :long-long))
      (defctype khronos_intptr_t :long-long)
      (defctype khronos_uintptr_t :unsigned-long-long)
      (defctype khronos_ssize_t :long-long)

@@ -8,7 +8,7 @@
       (error "Failed to initialize EGL with code ~d" (get-error)))
     (format t "~A~%" (get-error))
     (values (mem-aref major 'EGLint)
-	    (mem-aref minor 'EGLint))))
+            (mem-aref minor 'EGLint))))
 
 (defparameter *attribute-bitfield-types*
   (alexandria:plist-hash-table
@@ -38,14 +38,14 @@
                :for ,last = nil :then ,attrib
                :for ,attrib :in ,attribs
                :do (setf (mem-aref ,pointer-var 'EGLint ,i)
-		         (if (keywordp ,attrib)
-		             (if (evenp ,i)
+                         (if (keywordp ,attrib)
+                             (if (evenp ,i)
                                  ;; even indices indicate attribute being set
                                  (foreign-enum-value 'eglenum ,attrib)
                                  ;; odd indicies are values, which
                                  ;; might be an enum or bitfield
                                  (translate-attribute ,last ,attrib))
-		             ,attrib)))
+                             ,attrib)))
          ,@body))))
 
 (defun choose-config (display config-size &rest config-attribs)
