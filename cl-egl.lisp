@@ -1,42 +1,4 @@
-
 (in-package :egl)
-
-(define-foreign-library libegl
-  (t (:default "libEGL")))
-
-(use-foreign-library libegl)
-
-(defctype EGLBoolean :uint)
-(defctype EGLDisplay :pointer)
-(defctype EGLConfig :pointer)
-(defctype EGLSurface :pointer)
-(defctype EGLContext :pointer)
-(defctype EGLint :int32)
-
-(defcenum (eglenum EGLint)
-  (:surface-type #x3033)
-  (:window-bit #x0004)
-  (:red-size #x3024)
-  (:blue-size #x3022)
-  (:green-size #x3023)
-  (:depth-size #x3025)
-  (:renderable-type #x3040)
-  (:opengl-bit #x0008)
-  (:opengl-es-bit #x0001)
-  (:opengl-api #x30A2)
-  (:context-major-version #x3098)
-  (:context-minor-version #x30FB)
-  (:none #x3038))
-
-(defcfun ("eglGetError" get-error) EGLint)
-
-(defcfun ("eglGetDisplay" get-display) EGLDisplay
-  (display-id :pointer))
-
-(defcfun "eglInitialize" EGLBoolean
-  (display EGLDisplay)
-  (major :pointer)
-  (minor :pointer))
 
 (defun initialize (display)
   (with-foreign-objects
@@ -44,79 +6,58 @@
        (minor 'EGLint 1))
     (when (= (eglInitialize display major minor) 0)
       (terminate display)
-      (error "Failed to initialize EGL with code ~d" (get-error))
-      )
+      (error "Failed to initialize EGL with code ~d" (get-error)))
     (format t "~A~%" (get-error))
     (values (mem-aref major 'EGLint)
 	    (mem-aref minor 'EGLint))))
 
-(defcfun "eglChooseConfig" EGLBoolean
-  (display EGLDisplay)
-  (attrib-list (:pointer EGLint))
-  (configs (:pointer EGLConfig))
-  (config-size EGLint)
-  (num-config (:pointer EGLint)))
+(defparameter *attribute-bitfield-types*
+  (alexandria:plist-hash-table
+   '(:surface-type EGLSurfaceTypeMask
+     :renderable-type EGLRenderableTypeMask
+     :lock-usage-hint-khr EGLLockUsageHintKHRMask
+     :native-buffer-usage-android EGLNativeBufferUsageFlags
+     :drm-buffer-use-mesa EGLDRMBufferUseMESAMask
+     :context-flags-khr EGLContextFlagMask
+     :context-profile-mask EGLContextProfileMask)))
+
+(defun translate-attribute (attribute value)
+  (let* ((a (if (numberp attribute)
+                (foreign-enum-keyword 'eglenum attribute)
+                attribute))
+         (b (gethash a *attribute-bitfield-types*)))
+    (if b
+        (foreign-bitfield-value b value)
+        (foreign-enum-value 'eglenum value))))
+
+(defmacro with-attributes ((attribs pointer-var) &body body)
+  (alexandria:once-only (attribs)
+    (alexandria:with-gensyms (i last attrib)
+      `(with-foreign-objects ((,pointer-var 'EGLint (length ,attribs)))
+         (loop :for ,i :from 0
+               :for ,last = nil :then ,attrib
+               :for ,attrib :in ,attribs
+               :do (setf (mem-aref ,pointer-var 'EGLint ,i)
+		         (if (keywordp ,attrib)
+		             (if (evenp ,i)
+                                 ;; even indices indicate attribute being set
+                                 (foreign-enum-value 'eglenum ,attrib)
+                                 ;; odd indicies are values, which
+                                 ;; might be an enum or bitfield
+                                 (translate-attribute ,last ,attrib))
+		             ,attrib)))
+         ,@body))))
 
 (defun choose-config (display config-size &rest config-attribs)
-  (with-foreign-objects
-      ((requested-attribs 'EGLint (length config-attribs))
-       (available-configs '(:pointer EGLConfig) 1)
-       (num-configs 'EGLint 1))
-    (loop :for i :from 0 :to (- (length config-attribs) 1)
-       :do (setf (mem-aref requested-attribs 'EGLint i)
-		 (if (keywordp (nth i config-attribs))
-		     (foreign-enum-value 'eglenum (nth i config-attribs))
-		     (nth i config-attribs))))
-    (eglchooseconfig display requested-attribs available-configs config-size num-configs)
-    (loop :for i :from 0 :to (- (mem-aref num-configs 'EGLint) 1)
-       :collecting (mem-aref available-configs :pointer i))))
-
-(defcfun "eglCreateContext" EGLContext
-  (display EGLDisplay)
-  (config EGLConfig)
-  (share-context EGLContext)
-  (attrib-list (:pointer EGLint)))
+  (with-foreign-objects ((available-configs '(:pointer EGLConfig) 1)
+                         (num-configs 'EGLint 1))
+    (with-attributes (config-attribs requested-attribs)
+      (eglchooseconfig display requested-attribs available-configs
+                       config-size num-configs))
+    (loop :for i :from 0 :below (mem-aref num-configs 'EGLint)
+          :collecting (mem-aref available-configs :pointer i))))
 
 (defun create-context (display config share-context &rest attribs)
-  (with-foreign-objects
-      ((requested-attribs 'EGLint (length attribs)))
-    (loop :for i :from 0 :to (- (length attribs) 1)
-       :do (setf (mem-aref requested-attribs 'EGLint i)
-		 (if (keywordp (nth i attribs))
-		     (foreign-enum-value 'eglenum (nth i attribs))
-		     (nth i attribs))))
+  (with-attributes (attribs requested-attribs)
     (eglcreatecontext display config share-context requested-attribs)))
-
-(defcfun ("eglCreateWindowSurface" create-window-surface) EGLSurface
-  (display EGLDisplay)
-  (config EGLConfig)
-  (win :pointer)
-  (attrib-list (:pointer EGLint)))
-
-(defcfun ("eglTerminate" terminate) EGLBoolean
-  (display EGLDisplay))
-
-(defcfun "eglBindAPI" EGLBoolean
-  (api :uint))
-
-(defun bind-api (api)
-  (eglbindapi (foreign-enum-value 'eglenum api)))
-  
-(defcfun ("eglMakeCurrent" make-current) EGLBoolean
-  (display EGLDisplay)
-  (draw EGLSurface)
-  (read EGLSurface)
-  (context EGLContext))
-
-(defcfun ("eglSwapBuffers" swap-buffers) EGLBoolean
-  (display EGLDisplay)
-  (surface EGLSurface))
-
-(defcfun ("eglDestroySurface" destroy-surface) EGLBoolean
-  (display EGLDisplay)
-  (surface EGLSurface))
-
-(defcfun ("eglDestroyContext" destroy-context) EGLBoolean
-  (display EGLDisplay)
-  (context EGLContext))
 
