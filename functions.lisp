@@ -511,7 +511,7 @@
 
 (defcfun ("eglQueryString" query-string) :string
   (dpy EGLDisplay)
-  (name EGLint))
+  (name EGLEnum))
 
 (defcfun "eglQuerySurface" EGLBoolean
   (dpy EGLDisplay)

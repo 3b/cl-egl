@@ -19,7 +19,8 @@
      :native-buffer-usage-android EGLNativeBufferUsageFlags
      :drm-buffer-use-mesa EGLDRMBufferUseMESAMask
      :context-flags-khr EGLContextFlagMask
-     :context-profile-mask EGLContextProfileMask)))
+     :context-profile-mask EGLContextProfileMask
+     :conformant EGLRenderableTypeMask)))
 
 (defun translate-attribute (attribute value)
   (let* ((a (if (numberp attribute)

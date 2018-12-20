@@ -246,7 +246,8 @@
      "eglWaitSync" (2 "EGLSyncFlagsKHR")
      "eglWaitSyncKHR" (2 "EGLSyncFlagsKHR")
      "eglWaitSyncNV" (1 "EGLSyncFlagsNV")
-     "eglSurfaceAttrib" (2 "EGLEnum"))
+     "eglSurfaceAttrib" (2 "EGLEnum")
+     "eglQueryString" (1 "EGLEnum"))
    :test 'equal))
 
 (defun fix-args-types (n p)

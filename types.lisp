@@ -48,10 +48,35 @@
 ;; from eglplatfoprm.h
 ;;; depending on platform these are mostly pointers, intptr_t, or
 ;;; unsigned-long, so just storing them as uintptr_t to hide the
-;;; pointers from lisp code
-(defctype EGLNativeDisplayType khronos_uintptr_t) ;; int on ios?
-(defctype EGLNativePixmapType khronos_uintptr_t)
-(defctype EGLNativeWindowType khronos_uintptr_t)
+;;; pointers from lisp code. They also allow EGLEnum for 'default', so
+;;; define a special type for that
+
+
+(define-foreign-type enum-or-uintptr ()
+  ()
+  (:actual-type khronos_uintptr_t)
+  (:simple-parser enum-or-uintptr))
+
+(defmethod translate-to-foreign (value (type enum-or-uintptr))
+  (if (keywordp value)
+      (foreign-enum-value 'eglenum value)
+      value))
+
+(defmethod expand-to-foreign (value (type enum-or-uintptr))
+  (cond
+    ((and (constantp value) (keywordp value))
+     (foreign-enum-value 'eglenum value))
+    ((numberp value)
+     value)
+    (t
+     (alexandria:once-only (value)
+       `(if (keywordp ,value)
+            (foreign-enum-value 'eglenum ,value)
+            ,value)))))
+
+(defctype EGLNativeDisplayType enum-or-uintptr) ;; int on ios?
+(defctype EGLNativePixmapType enum-or-uintptr)
+(defctype EGLNativeWindowType enum-or-uintptr)
 
 (defctype NativeDisplayType EGLNativeDisplayType )
 (defctype NativePixmapType EGLNativePixmapType)
