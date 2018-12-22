@@ -35,6 +35,8 @@
    #:wait-client
    #:wait-gl
    #:wait-native
-   #:wait-sync))
+   #:wait-sync
+   #:get-config-attribs
+   #:get-config-attrib))
 
 

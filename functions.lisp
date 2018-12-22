@@ -34,7 +34,7 @@
 
 (defcfun ("eglClientWaitSyncNV" client-wait-sync-nv) EGLint
   (sync EGLSyncNV)
-  (flags EGLSyncFlagsNV)
+  (flags EGLSyncFlagsKHR)
   (timeout EGLTimeNV))
 
 (defcfun ("eglCopyBuffers" copy-buffers) EGLBoolean
@@ -232,7 +232,7 @@
 (defcfun "eglGetConfigAttrib" EGLBoolean
   (dpy EGLDisplay)
   (config EGLConfig)
-  (attribute EGLint)
+  (attribute EGLenum)
   (value (:pointer EGLint)))
 
 (defcfun "eglGetConfigs" EGLBoolean

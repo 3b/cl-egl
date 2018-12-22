@@ -12,6 +12,36 @@
 (defctype khronos_uint64_t :uint64)
 
 
+
+(define-foreign-type enum-or-pointer ()
+  ()
+  (:actual-type :pointer)
+  (:simple-parser enum-or-pointer))
+
+(defmethod translate-to-foreign (value (type enum-or-pointer))
+  (if (keywordp value)
+      (cffi:make-pointer (foreign-enum-value 'eglenum value))
+      (if (cffi:pointerp value)
+          value
+          (cffi:make-pointer value))))
+
+(defmethod expand-to-foreign (value (type enum-or-pointer))
+  (cond
+    ((and (constantp value) (keywordp value))
+     (cffi:make-pointer (foreign-enum-value 'eglenum value)))
+    ((numberp value)
+     (cffi:make-pointer value))
+    ((cffi:pointerp value)
+     value)
+    (t
+     (alexandria:once-only (value)
+       `(if (keywordp ,value)
+            (cffi:make-pointer (foreign-enum-value 'eglenum ,value))
+            (if (cffi:pointerp ,value)
+                ,value
+                (cffi:make-pointer ,value)))))))
+
+
 (eval-when (:compile-toplevel :load-toplevel :execute)
   ;; try to figure out a good size for intptr_t etc
   (cond
@@ -36,10 +66,10 @@
 (defctype khronos_stime_nanoseconds_t :int64)
 
 (defctype EGLBoolean :uint)
-(defctype EGLDisplay :pointer)
-(defctype EGLConfig :pointer)
-(defctype EGLSurface :pointer)
-(defctype EGLContext :pointer)
+(defctype EGLDisplay enum-or-pointer)
+(defctype EGLConfig enum-or-pointer)
+(defctype EGLSurface enum-or-pointer)
+(defctype EGLContext enum-or-pointer)
 (defctype EGLint :int32)
 
 (defctype intptr_t khronos_intptr_t)
@@ -60,7 +90,9 @@
 (defmethod translate-to-foreign (value (type enum-or-uintptr))
   (if (keywordp value)
       (foreign-enum-value 'eglenum value)
-      value))
+      (if (cffi:pointerp value)
+          (cffi:pointer-address value)
+          value)))
 
 (defmethod expand-to-foreign (value (type enum-or-uintptr))
   (cond
@@ -68,11 +100,16 @@
      (foreign-enum-value 'eglenum value))
     ((numberp value)
      value)
+
+    ((cffi:pointerp value)
+     (cffi:pointer-address value))
     (t
      (alexandria:once-only (value)
        `(if (keywordp ,value)
             (foreign-enum-value 'eglenum ,value)
-            ,value)))))
+            (if (cffi:pointerp ,value)
+                (cffi:pointer-address ,value)
+                ,value))))))
 
 (defctype EGLNativeDisplayType enum-or-uintptr) ;; int on ios?
 (defctype EGLNativePixmapType enum-or-uintptr)
@@ -92,10 +129,10 @@
 (defctype EGLAttribKHR intptr_t)
 (defctype EGLAttrib intptr_t)
 (defctype EGLClientBuffer (:pointer :void))
-(defctype EGLConfig (:pointer :void))
-(defctype EGLContext (:pointer :void))
+;(defctype EGLConfig (:pointer :void))
+;(defctype EGLContext (:pointer :void))
 (defctype EGLDeviceEXT (:pointer :void))
-(defctype EGLDisplay (:pointer :void))
+;(defctype EGLDisplay (:pointer :void))
 (defctype EGLImage (:pointer :void))
 (defctype EGLImageKHR (:pointer :void))
 (defctype EGLLabelKHR (:pointer :void))
@@ -103,7 +140,7 @@
 (defctype EGLOutputLayerEXT (:pointer :void))
 (defctype EGLOutputPortEXT (:pointer :void))
 (defctype EGLStreamKHR (:pointer :void))
-(defctype EGLSurface (:pointer :void))
+;(defctype EGLSurface (:pointer :void))
 (defctype EGLSync (:pointer :void))
 (defctype EGLSyncKHR (:pointer :void))
 (defctype EGLSyncNV (:pointer :void))
