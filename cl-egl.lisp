@@ -85,7 +85,7 @@
           :collecting (mem-aref available-configs :pointer i))))
 
 (defun choose-config* (display &rest config-attribs)
-  (with-foreign-objects ((num-configs 'EGLint 0))
+  (with-foreign-objects ((num-configs 'EGLint))
     (with-attribute-list (config-attribs requested-attribs)
       (check (eglchooseconfig display requested-attribs (cffi:null-pointer)
                               0 num-configs))
