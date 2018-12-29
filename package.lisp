@@ -37,6 +37,7 @@
    #:wait-native
    #:wait-sync
    #:get-config-attribs
-   #:get-config-attrib))
+   #:get-config-attrib
+   #:query-surface))
 
 

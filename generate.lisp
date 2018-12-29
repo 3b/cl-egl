@@ -249,6 +249,7 @@
      "eglSurfaceAttrib" (2 "EGLEnum")
      "eglQueryString" (1 "EGLEnum")
      "eglGetConfigAttrib" (2 "EGLEnum")
+     "eglQuerySurface" (2 "EGLEnum")
      )
    :test 'equal))
 

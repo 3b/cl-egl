@@ -280,7 +280,7 @@
   (native_display (:pointer :void))
   (attrib_list (:pointer EGLint)))
 
-(defcfun ("eglGetProcAddress" get-proc-address) :pointer
+(defcfun ("eglGetProcAddress" .get-proc-address) :pointer
   (procname :string))
 
 (defcfun ("eglGetStreamFileDescriptorKHR" get-stream-file-descriptor-khr) EGLNativeFileDescriptorKHR
@@ -516,7 +516,7 @@
 (defcfun "eglQuerySurface" EGLBoolean
   (dpy EGLDisplay)
   (surface EGLSurface)
-  (attribute EGLint)
+  (attribute EGLenum)
   (value (:pointer EGLint)))
 
 (defcfun "eglQuerySurface64KHR" EGLBoolean

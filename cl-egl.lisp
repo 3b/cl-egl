@@ -154,3 +154,15 @@
     collect  i
     collect (get-config-attrib display config i)))
 
+(defun query-surface (display surface attribute)
+  (with-foreign-objects ((v 'eglint))
+    (check (eglquerysurface display surface attribute v))
+    (let ((a (cffi:mem-ref v 'eglint)))
+      (list a (cffi:foreign-enum-keyword 'eglenum a :errorp nil)))))
+
+(defun get-proc-address (s)
+  (format t "lookup ext pointer ~s~%" s)
+  (let ((a (check (.get-proc-address s))))
+    (if (cffi:null-pointer-p a)
+        (cffi:foreign-symbol-pointer s)
+        a)))
