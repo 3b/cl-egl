@@ -38,6 +38,8 @@
    #:wait-sync
    #:get-config-attribs
    #:get-config-attrib
-   #:query-surface))
+   #:query-surface
+   #:get-platform-display-ext
+   #:get-platform-display))
 
 

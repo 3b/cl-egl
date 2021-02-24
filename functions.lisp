@@ -270,12 +270,12 @@
   (max_ports EGLint)
   (num_ports (:pointer EGLint)))
 
-(defcfun "eglGetPlatformDisplay" EGLDisplay
+(defcfun ("eglGetPlatformDisplay" get-platform-display) EGLDisplay
   (platform EGLenum)
   (native_display (:pointer :void))
   (attrib_list (:pointer EGLAttrib)))
 
-(defcfun "eglGetPlatformDisplayEXT" EGLDisplay
+(defcfun ("eglGetPlatformDisplayEXT" get-platform-display-ext) EGLDisplay
   (platform EGLenum)
   (native_display (:pointer :void))
   (attrib_list (:pointer EGLint)))
